@@ -1,0 +1,41 @@
+[
+  {
+    "name": "ampl-down",
+    "type": "single_asset",
+    "asset_id" : "ampleforth",
+    "condition": "<",
+    "value": "1.02",
+    "recipient" : "joigno",
+    "message" : "AMPL is below 1.02 USD"
+  },
+  {
+    "name": "ampl-up",
+    "type": "single_asset",
+    "asset_id" : "ampleforth",
+    "condition": ">",
+    "value": "1.06",
+    "recipient" : "joigno",
+    "message" : "AMPL is above 1.06 USD"
+  },
+
+    {
+    "portfolio": "volatility",
+    "name": "cash-up",
+    "type": "cash_percentage",
+    "condition": ">",
+    "value": "66.6",
+    "recipient" : "joigno",
+    "message" : "Cash Value of portfolio 'volatility' is above 66.6%",
+      "min_trades_usd" : "10.0"
+  },
+    {
+    "portfolio": "volatility",
+    "name": "cash-down",
+    "type": "cash_percentage",
+    "condition": "<",
+    "value": "33.3",
+    "recipient" : "joigno",
+    "message" : "Cash Value of portfolio 'volatility' is below 33.3%",
+      "min_trades_usd" : "10.0"
+  }
+]

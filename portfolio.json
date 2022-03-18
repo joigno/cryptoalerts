@@ -1,0 +1,15 @@
+{
+  "volatility": {
+    "portfolio_assets": {
+      "ethereum": {
+        "amount": "0.4"
+      },
+      "bitcoin": {
+        "amount": "0.01"
+      },
+      "usd": {
+        "amount": "5784.0"
+      }
+    }
+  }
+}
