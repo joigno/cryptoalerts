@@ -134,7 +134,7 @@ def run(portfolios=None, alerts=None, prices=None):
             if triggered:
                 # Send Email
                 print(alert['message'])
-                # send_email(alert['recipient'].split(','), 'CRYPTO-ALERT: '+ alert['message'])
+                send_email(alert['recipient'].split(','), 'CRYPTO-ALERT: '+ alert['message'])
 
         elif alert['type'] == 'cash_percentage':
             triggered, prices, msg_extra = process_alert_cash(alert, prices, cg, portfolios)
@@ -143,10 +143,10 @@ def run(portfolios=None, alerts=None, prices=None):
                 msg = alert['message'] + '<br/>\n' + msg_extra
                 subject = 'ALERT crypto-alerts: ' + alert['message']
                 print(msg)
-                #send_email(alert['recipient'].split(','), subject, msg)
+                send_email(alert['recipient'].split(','), subject, msg)
 
         # Send Status Message (Daily)
-        if datetime.datetime.now().hour == 21:
+        if datetime.datetime.now().hour == 12:
             print('INFO: sending status email')
             subject = 'INFO crypto-alerts: system is up and running'
             msg = subject + '\n' + '<pre>' + json.dumps(portfolios, indent=4, sort_keys=True)  \
