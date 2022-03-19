@@ -13,17 +13,17 @@ def print_hi(name):
     print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
 
 def load_alerts():
-    #try:
-    #    ret_val = default_alerts()
-    #except:
-    ret_val = json.load(open('alerts.json'))
+    try:
+        ret_val = default_alerts()
+    except:
+        ret_val = json.load(open('alerts.json'))
     return ret_val
 
 def load_portfolios():
-    #try:
-    #    ret_val = default_portfolio()
-    #except:
-    ret_val = json.load(open('portfolio.json'))
+    try:
+        ret_val = default_portfolio()
+    except:
+        ret_val = json.load(open('portfolio.json'))
     return ret_val
 
 
