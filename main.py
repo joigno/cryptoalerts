@@ -71,7 +71,7 @@ def calculate_rebalancing(
     expected_value = total_value * 50.0 / 100.0 # * cash_percentage / 100.0
     print('expected_value = ', expected_value)
     num_assets = len(portfolio['portfolio_assets'].keys())
-    balanced_value = expected_value / num_assets
+    balanced_value = expected_value / (num_assets-1)
     print('balanced_value = ', balanced_value)
 
     for asset in portfolio['portfolio_assets'].keys():
