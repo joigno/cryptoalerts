@@ -83,6 +83,7 @@ def calculate_rebalancing(
         curr_value = curr_amount * prices[asset]
         print("price %s = "% asset, prices[asset])
         diff_value = curr_value - balanced_value
+        print("curr_value %s = "% asset, curr_value)
         print('diff_value %s =' % asset, diff_value)
         if diff_value > tolerance_usd:
             # SELL
