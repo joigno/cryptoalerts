@@ -72,13 +72,16 @@ def calculate_rebalancing(
     print('expected_value = ', expected_value)
     num_assets = len(portfolio['portfolio_assets'].keys())
     balanced_value = expected_value / num_assets
+    print('balanced_value = ', balanced_value)
 
     for asset in portfolio['portfolio_assets'].keys():
         if asset == 'usd':
             continue
         # diff
         curr_amount = float(portfolio['portfolio_assets'][asset]['amount'])
+        print("amount %s = "% asset, curr_amount)
         curr_value = curr_amount * prices[asset]
+        print("price %s = "% asset, prices[asset])
         diff_value = curr_value - balanced_value
         print('diff_value %s =' % asset, diff_value)
         if diff_value > tolerance_usd:
