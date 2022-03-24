@@ -57,6 +57,13 @@ def update_prices_portfolio(portfolio,prices, cg):
 
 def calculate_rebalancing(
         cash_value, usd_total, prices, portfolio, cash_percentage, current_cash_percentage, tolerance_usd):
+    """cash_value <- total usd in crypto
+       usd_total <- cantidad de busd
+       prices <- 
+       portfolio <- el json que aparece en default.json file
+       cash_percentage <- porcentaje que define el umbral para rebalancear
+       current_cash_percentage <- cash_value / (usd_total + cash_value)
+       tolerance_usd <- minimum volume para operar"""
     ret = ''
     total_value = cash_value + usd_total
     print('total_value = ', total_value)
