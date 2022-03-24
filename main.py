@@ -61,7 +61,7 @@ def calculate_rebalancing(
     total_value = cash_value + usd_total
     print('total_value = ', total_value)
     # cash_percentange is really non-cash percentage
-    expected_value = total_value * cash_percentage / 100.0
+    expected_value = total_value * 50.0 / 100.0 # * cash_percentage / 100.0
     print('expected_value = ', expected_value)
     num_assets = len(portfolio['portfolio_assets'].keys())
     balanced_value = expected_value / num_assets
