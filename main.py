@@ -139,6 +139,7 @@ def process_alert_crypto(alert, prices, cg, portfolios):
     for asset in portfolio['portfolio_assets'].keys():
         if asset == 'usd':
             continue
+        print('asset = ', asset.upper())
         # cash value of 1 crypto asset
         curr_amount = float(portfolio['portfolio_assets'][asset]['amount'])
         print("amount %s = "% asset, curr_amount)
@@ -147,6 +148,10 @@ def process_alert_crypto(alert, prices, cg, portfolios):
 
         # analyze logical conditions
         condition_value = float(alert['value'])
+        print('condition ', alert['condition'])
+        print('curr_crypto_percentage = ', curr_crypto_percentage)
+        print('delta_condition_percentage = ', condition_value)
+        print('limit_condition_percentage = ', target_crypto_percentage + condition_value)
         if alert['condition'] == '>':
             triggered = curr_crypto_percentage > target_crypto_percentage + condition_value
             portfolio['cash_percentage'] = 0
