@@ -137,7 +137,7 @@ def process_alert_crypto(alert, prices, cg, portfolios):
     target_crypto_value = (cash_value_cryptos / cryptos_num)
 
     for asset in portfolio['portfolio_assets'].keys():
-        if crypto == 'usd':
+        if asset == 'usd':
             continue
         # cash value of 1 crypto asset
         curr_amount = float(portfolio['portfolio_assets'][asset]['amount'])
