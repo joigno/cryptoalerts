@@ -180,7 +180,7 @@ def run(portfolios=None, alerts=None, prices=None):
     msg = ''
     status_sent = {}
     for alert in alerts:
-        print('--------------- processsing alert ---------------')
+        print('--------------- processsing alert %s ---------------' % alert['type'].upper())
         if alert['type'] == 'single_asset':
             triggered, prices = process_alert_single(alert, prices, cg, portfolios)
             if triggered:
