@@ -55,20 +55,18 @@ def update_prices_portfolio(portfolio,prices, cg):
     return cash_value, prices
 
 
-def calculate_rebalancing(
-        cash_value, usd_total, prices, portfolio, cash_percentage, current_cash_percentage, tolerance_usd):
+def calculate_rebalancing(cash_value, usd_total, prices, portfolio, min_trade_usd):
     """cash_value <- total usd in crypto
        usd_total <- cantidad de busd
        prices <- 
        portfolio <- el json que aparece en default.json file
-       cash_percentage <- porcentaje que define el umbral para rebalancear
-       current_cash_percentage <- cash_value / (usd_total + cash_value)
        tolerance_usd <- minimum volume para operar"""
     ret = ''
     total_value = cash_value + usd_total
     print('total_value = ', total_value)
-    # cash_percentange is really non-cash percentage
-    expected_value = total_value * 50.0 / 100.0 # * cash_percentage / 100.0
+    # cash_percentage is really non-cash percentage
+    cash_percentage_portfolio = float(portfolio['cash_percentage'])
+    expected_value = total_value * (100.0-cash_percentage_portfolio) / 100.0
     print('expected_value = ', expected_value)
     num_assets = len(portfolio['portfolio_assets'].keys())
     balanced_value = expected_value / (num_assets-1)
@@ -85,11 +83,11 @@ def calculate_rebalancing(
         diff_value = curr_value - balanced_value
         print("curr_value %s = "% asset, curr_value)
         print('diff_value %s =' % asset, diff_value)
-        if diff_value > tolerance_usd:
+        if diff_value > min_trade_usd:
             # SELL
             sell_amount = diff_value / prices[asset]
             ret += '<br/>\nSELL %f %s' % (sell_amount, asset.upper())
-        elif diff_value < -tolerance_usd:
+        elif diff_value < -min_trade_usd:
             # BUY
             buy_amount = -diff_value / prices[asset]
             ret += '<br/>\nBUY %f %s' % (buy_amount, asset.upper())
@@ -97,7 +95,7 @@ def calculate_rebalancing(
 
 
 def process_alert_cash(alert, prices, cg, portfolios):
-    tolerance_usd = float(alert['min_trades_usd'])
+    min_trade_usd = float(alert['min_trade_usd'])
     triggered = False
     portfolio_name = alert['portfolio']
     portfolio = portfolios[portfolio_name]
@@ -107,19 +105,20 @@ def process_alert_cash(alert, prices, cg, portfolios):
     # cash value of USD assets
     usd_total = float(portfolio['portfolio_assets']['usd']['amount'])
     print('usd_total = ', usd_total)
-    cash_percentage = float(alert['value'])
+    cash_percentage_alert = float(alert['value'])
     current_cash_percentage = 100.0 * cash_value / (cash_value + usd_total)
-    print('cash_percentage = ',cash_percentage)
+    print('cash_percentage_alert = ',cash_percentage_alert)
     print('current_cash_percentage = ', current_cash_percentage)
+    print('cash_percentage_portfolio = ', portfolio['cash_percentage'])
 
     # analyze logical conditions
     msg_extra = ''
     if alert['condition'] == '>':
-        triggered = current_cash_percentage > cash_percentage
-        msg_extra = calculate_rebalancing(cash_value, usd_total, prices, portfolio, cash_percentage, current_cash_percentage, tolerance_usd)
+        triggered = current_cash_percentage > cash_percentage_alert
+        msg_extra = calculate_rebalancing(cash_value, usd_total, prices, portfolio, min_trade_usd)
     elif alert['condition'] == '<':
-        triggered = current_cash_percentage < cash_percentage
-        msg_extra = calculate_rebalancing(cash_value, usd_total, prices, portfolio, cash_percentage, current_cash_percentage, tolerance_usd)
+        triggered = current_cash_percentage < cash_percentage_alert
+        msg_extra = calculate_rebalancing(cash_value, usd_total, prices, portfolio, min_trade_usd)
     return triggered, prices, msg_extra
 
 
