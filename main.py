@@ -146,14 +146,15 @@ def process_alert_crypto(alert, prices, cg, portfolios):
         curr_crypto_percentage = 100.0 * curr_value / cash_value_cryptos
 
         # analyze logical conditions
+        condition_value = float(alert['value'])
         if alert['condition'] == '>':
-            triggered = curr_crypto_percentage > target_crypto_percentage + alert['value']
+            triggered = curr_crypto_percentage > target_crypto_percentage + condition_value
             portfolio['cash_percentage'] = 0
             portfolio['portfolio_assets']['usd']['amount'] = 0
             msg_extra = calculate_rebalancing(cash_value_cryptos, 0.0, prices, portfolio, min_trade_usd)
 
         elif alert['condition'] == '<':
-            triggered = curr_crypto_percentage < target_crypto_percentage - alert['value']
+            triggered = curr_crypto_percentage < target_crypto_percentage - condition_value
             portfolio['cash_percentage'] = 0
             portfolio['portfolio_assets']['usd']['amount'] = 0
             msg_extra = calculate_rebalancing(cash_value_cryptos, 0.0, prices, portfolio, min_trade_usd)
