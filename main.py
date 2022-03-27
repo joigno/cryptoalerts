@@ -8,6 +8,12 @@ import json, datetime
 from send_emails import send_email
 from web_data import default_portfolio, default_alerts
 
+cg = CoinGeckoAPI()
+
+def get_price_market(base_ticker, target_ticker='BUSD', market='binance'):
+    return [ticker for ticker in cg.get_exchanges_by_id(market)['tickers']
+            if ticker['base'] == base_ticker and ticker['target']==target_ticker][0]['last']
+
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
     print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
@@ -44,12 +50,17 @@ def process_alert_single(alert, prices, cg, portfolios):
 
 
 def update_prices_portfolio(portfolio,prices, cg):
+    asset_ticker = {
+        'avalanche-2' : 'AVAX',
+        'terra-luna' : 'LUNA'
+    }
     cash_value = 0.0
     for asset in portfolio['portfolio_assets'].keys():
         if asset == 'usd':
             continue
         if asset not in prices:
-            price = cg.get_price(ids=asset, vs_currencies='usd')[asset]['usd']
+            #price = cg.get_price(ids=asset, vs_currencies='usd')[asset]['usd']
+            price = get_price_market(asset_ticker[asset])
             prices[asset] = price
         cash_value += prices[asset] * float(portfolio['portfolio_assets'][asset]['amount'])
     return cash_value, prices
@@ -172,7 +183,6 @@ def process_alert_crypto(alert, prices, cg, portfolios):
 
 def run(portfolios=None, alerts=None, prices=None):
     print_hi('PyCharm')
-    cg = CoinGeckoAPI()
     print(cg.get_price(ids='ampleforth', vs_currencies='usd'))
 
     # portfolio https://raw.githubusercontent.com/joigno/alerts/main/default.json
