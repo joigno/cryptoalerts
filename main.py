@@ -11,8 +11,13 @@ from web_data import default_portfolio, default_alerts
 cg = CoinGeckoAPI()
 
 def get_price_market(base_ticker, target_ticker='BUSD', market='binance'):
-    return [ticker for ticker in cg.get_exchanges_by_id(market)['tickers']
-            if ticker['base'] == base_ticker and ticker['target']==target_ticker][0]['last']
+    pairs = [ticker for ticker in cg.get_exchanges_by_id(market)['tickers']
+            if ticker['base'] == base_ticker and ticker['target']==target_ticker]
+    if pairs == []:
+        target_ticker = 'USDT'
+        pairs = [ticker for ticker in cg.get_exchanges_by_id(market)['tickers']
+                if ticker['base'] == base_ticker and ticker['target']==target_ticker]
+    return pairs[0]['last']
 
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
