@@ -3,7 +3,7 @@
 # Press ⌃R to execute it or replace it with your code.
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 from pycoingecko import CoinGeckoAPI
-import json, datetime, logging, datetime
+import json, datetime, logging, datetime, os
 
 logging.basicConfig(filename='cryptoalerts.log', level=logging.INFO)
 
@@ -168,16 +168,24 @@ def process_alert_crypto(alert, prices, cg, portfolios):
         if alert['condition'] == '>':
             triggered = curr_crypto_percentage > target_crypto_percentage + condition_value
             logging.info("limit_condition_percentage = %.4f" % (target_crypto_percentage + condition_value))
+            cash_backup = portfolio['cash_percentage']
+            usd_amount_backup = portfolio['portfolio_assets']['usd']['amount']
             portfolio['cash_percentage'] = 0
             portfolio['portfolio_assets']['usd']['amount'] = 0
             msg_extra = calculate_rebalancing(cash_value_cryptos, 0.0, prices, portfolio, min_trade_usd)
+            portfolio['cash_percentage'] = cash_backup
+            portfolio['portfolio_assets']['usd']['amount'] = usd_amount_backup
 
         elif alert['condition'] == '<':
             triggered = curr_crypto_percentage < target_crypto_percentage - condition_value
             logging.info("limit_condition_percentage = %.4f" % (target_crypto_percentage - condition_value))
+            cash_backup = portfolio['cash_percentage']
+            usd_amount_backup = portfolio['portfolio_assets']['usd']['amount']
             portfolio['cash_percentage'] = 0
             portfolio['portfolio_assets']['usd']['amount'] = 0
             msg_extra = calculate_rebalancing(cash_value_cryptos, 0.0, prices, portfolio, min_trade_usd)
+            portfolio['cash_percentage'] = cash_backup
+            portfolio['portfolio_assets']['usd']['amount'] = usd_amount_backup
 
         if triggered:
             break
@@ -186,6 +194,8 @@ def process_alert_crypto(alert, prices, cg, portfolios):
 
 def run(portfolios=None, alerts=None, prices=None):
 
+    logging.info('='*80)
+    logging.info('='*80)
     logging.info('='*80)
     logging.info('BUENOS_AIRES ' + str(datetime.datetime.now()-datetime.timedelta(hours=4)))
     logging.info('PARIS        ' + str(datetime.datetime.now()))
@@ -216,7 +226,9 @@ def run(portfolios=None, alerts=None, prices=None):
                 msg = alert['message'] + '<br/>\n' + msg_extra
                 subject = 'ALERT crypto-alerts: ' + alert['message']
                 logging.info(msg)
-                send_email(alert['recipient'].split(','), subject, msg)
+                os.system('tail -n 117 cryptoalerts.log > extra.log;')
+                extra = open('extra.log').read()
+                send_email(alert['recipient'].split(','), subject, msg + '\n\n' + extra)
 
         elif alert['type'] == 'crypto_percentage':
             triggered, prices, msg_extra = process_alert_crypto(alert, prices, cg, portfolios)
@@ -225,7 +237,9 @@ def run(portfolios=None, alerts=None, prices=None):
                 msg = alert['message'] + '<br/>\n' + msg_extra
                 subject = 'ALERT crypto-alerts: ' + alert['message']
                 logging.info(msg)
-                send_email(alert['recipient'].split(','), subject, msg)
+                os.system('tail -n 117 cryptoalerts.log > extra.log;')
+                extra = open('extra.log').read()
+                send_email(alert['recipient'].split(','), subject, msg + '\n\n' + extra)
 
     # Send Status Message (Daily)
     if datetime.datetime.now().hour == 12:
@@ -247,3 +261,4 @@ if __name__ == '__main__':
     run()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
