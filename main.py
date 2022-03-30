@@ -197,8 +197,9 @@ def run(portfolios=None, alerts=None, prices=None):
     logging.info('='*80)
     logging.info('='*80)
     logging.info('='*80)
-    logging.info('BUENOS_AIRES ' + str(datetime.datetime.now()-datetime.timedelta(hours=4)))
-    logging.info('PARIS        ' + str(datetime.datetime.now()))
+    logging.info('BUENOS_AIRES ' + str(datetime.datetime.now()-datetime.timedelta(hours=3)))
+    logging.info('GMT (SERVER) ' + str(datetime.datetime.now()+datetime.timedelta(hours=0)))
+    logging.info('PARIS        ' + str(datetime.datetime.now()+datetime.timedelta(hours=1)))
 
     # portfolio https://raw.githubusercontent.com/joigno/alerts/main/default.json
     if not portfolios:
