@@ -1,5 +1,8 @@
 import os, time
 
+# https://data.binance.vision/?prefix=data/spot/daily/klines/AVAXBUSD/5m/
+# https://data.binance.vision/data/spot/daily/klines/AVAXBUSD/5m/AVAXBUSD-5m-2022-03-29.zip
+# per pair https://data.binance.vision/?prefix=data/spot/daily/klines/
 pair = 'LUNABUSD'
 period = '5m'
 month = '03'
