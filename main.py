@@ -228,7 +228,7 @@ def run(portfolios=None, alerts=None, prices=None):
                 subject = 'ALERT crypto-alerts: ' + alert['message']
                 logging.info(msg)
                 os.system('tail -n 117 cryptoalerts.log > extra.log;')
-                extra = open('extra.log').read()
+                extra = '\n' + '<br/><pre>' + open('extra.log').read() + '<pre/>'
                 send_email(alert['recipient'].split(','), subject, msg + '\n\n' + extra)
 
         elif alert['type'] == 'crypto_percentage':
@@ -239,7 +239,7 @@ def run(portfolios=None, alerts=None, prices=None):
                 subject = 'ALERT crypto-alerts: ' + alert['message']
                 logging.info(msg)
                 os.system('tail -n 117 cryptoalerts.log > extra.log;')
-                extra = open('extra.log').read()
+                extra = '\n' + '<br/><pre>' + str(open('extra.log').read()) + '<pre/>'
                 send_email(alert['recipient'].split(','), subject, msg + '\n\n' + extra)
 
     # Send Status Message (Daily)
