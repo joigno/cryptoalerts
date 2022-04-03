@@ -3,7 +3,7 @@ import os, time
 # https://data.binance.vision/?prefix=data/spot/daily/klines/AVAXBUSD/5m/
 # https://data.binance.vision/data/spot/daily/klines/AVAXBUSD/5m/AVAXBUSD-5m-2022-03-29.zip
 # per pair https://data.binance.vision/?prefix=data/spot/daily/klines/
-pair = 'LUNABUSD'
+pair = 'ETHBUSD'
 period = '5m'
 month = '03'
 
@@ -27,6 +27,6 @@ for i in range(1,30):
     os.system('cat %s >> %s' % (fname.replace('.zip','.csv'),full_fname))
     os.system('rm ' + fname.replace('.zip','.csv'))
 
-    print('waiting 3 seconds ....')
-    time.sleep(3.0)
+    print('waiting 2 seconds ....')
+    time.sleep(2.0)
 

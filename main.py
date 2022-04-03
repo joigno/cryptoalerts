@@ -8,7 +8,7 @@ import json, datetime, logging, datetime, os
 logging.basicConfig(filename='cryptoalerts.log', level=logging.INFO)
 
 from send_emails import send_email
-from web_data import default_portfolio, default_alerts
+from utils import load_alerts, load_portfolios
 
 cg = CoinGeckoAPI()
 
@@ -20,20 +20,6 @@ def get_price_market(base_ticker, target_ticker='BUSD', market='binance'):
         pairs = [ticker for ticker in cg.get_exchanges_by_id(market)['tickers']
                 if ticker['base'] == base_ticker and ticker['target']==target_ticker]
     return pairs[0]['last']
-
-def load_alerts():
-    try:
-        ret_val = default_alerts()
-    except:
-        ret_val = json.load(open('alerts.json'))
-    return ret_val
-
-def load_portfolios():
-    try:
-        ret_val = default_portfolio()
-    except:
-        ret_val = json.load(open('portfolio.json'))
-    return ret_val
 
 
 def process_alert_single(alert, prices, cg, portfolios):
@@ -55,7 +41,9 @@ def process_alert_single(alert, prices, cg, portfolios):
 def update_prices_portfolio(portfolio,prices, cg):
     asset_ticker = {
         'avalanche-2' : 'AVAX',
-        'terra-luna' : 'LUNA'
+        'terra-luna' : 'LUNA',
+        'ethereum': 'ETH',
+        'bitcoin': 'BTC',
     }
     cash_value = 0.0
     for asset in portfolio['portfolio_assets'].keys():
@@ -86,6 +74,7 @@ def calculate_rebalancing(cash_value, usd_total, prices, portfolio, min_trade_us
     balanced_value = expected_value / (num_assets-1)
     logging.info('balanced_value = %.4f'% balanced_value)
 
+    trades = []
     for asset in portfolio['portfolio_assets'].keys():
         if asset == 'usd':
             continue
@@ -101,14 +90,17 @@ def calculate_rebalancing(cash_value, usd_total, prices, portfolio, min_trade_us
             # SELL
             sell_amount = diff_value / prices[asset]
             ret += '<br/>\nSELL %f %s' % (sell_amount, asset.upper())
+            trades.append((asset,'SELL',sell_amount))
         elif diff_value < -min_trade_usd:
             # BUY
             buy_amount = -diff_value / prices[asset]
             ret += '<br/>\nBUY %f %s' % (buy_amount, asset.upper())
-    return ret
+            trades.append((asset, 'BUY', buy_amount))
+    return ret, trades
 
 
 def process_alert_cash(alert, prices, cg, portfolios):
+    trades = []
     min_trade_usd = float(alert['min_trade_usd'])
     triggered = False
     portfolio_name = alert['portfolio']
@@ -123,22 +115,32 @@ def process_alert_cash(alert, prices, cg, portfolios):
     current_cash_percentage = 100.0 * cash_value / (cash_value + usd_total)
     logging.info("cash_percentage_alert = %.4f" % cash_percentage_alert)
     logging.info("current_cash_percentage = %.4f" % current_cash_percentage)
+    #print("current_cash_percentage = %.4f" % current_cash_percentage)
     logging.info("cash_percentage_portfolio = %.4f" % float(portfolio['cash_percentage']))
 
     # analyze logical conditions
     msg_extra = ''
     if alert['condition'] == '>':
         triggered = current_cash_percentage > cash_percentage_alert
-        msg_extra = calculate_rebalancing(cash_value, usd_total, prices, portfolio, min_trade_usd)
+        if triggered:
+            #print("current_cash_percentage = %.4f" % current_cash_percentage)
+            #print("cash_percentage_alert = %.4f" % cash_percentage_alert)
+            msg_extra, trades = calculate_rebalancing(cash_value, usd_total, prices, portfolio, min_trade_usd)
+            #print('TRADES CASH: ', trades)
     elif alert['condition'] == '<':
         triggered = current_cash_percentage < cash_percentage_alert
-        msg_extra = calculate_rebalancing(cash_value, usd_total, prices, portfolio, min_trade_usd)
-    return triggered, prices, msg_extra
+        if triggered:
+            #print("current_cash_percentage = %.4f" % current_cash_percentage)
+            #print("cash_percentage_alert = %.4f" % cash_percentage_alert)
+            msg_extra, trades = calculate_rebalancing(cash_value, usd_total, prices, portfolio, min_trade_usd)
+            #print('TRADES CASH: ', trades)
+    return triggered, prices, msg_extra, trades
 
 
 def process_alert_crypto(alert, prices, cg, portfolios):
     min_trade_usd = float(alert['min_trade_usd'])
     triggered = False
+    trades = []
     portfolio_name = alert['portfolio']
     portfolio = portfolios[portfolio_name]
     # cash value of non-USD assets
@@ -167,32 +169,41 @@ def process_alert_crypto(alert, prices, cg, portfolios):
         logging.info("delta_condition_percentage = %.4f" % condition_value)
         if alert['condition'] == '>':
             triggered = curr_crypto_percentage > target_crypto_percentage + condition_value
-            logging.info("limit_condition_percentage = %.4f" % (target_crypto_percentage + condition_value))
-            cash_backup = portfolio['cash_percentage']
-            usd_amount_backup = portfolio['portfolio_assets']['usd']['amount']
-            portfolio['cash_percentage'] = 0
-            portfolio['portfolio_assets']['usd']['amount'] = 0
-            msg_extra = calculate_rebalancing(cash_value_cryptos, 0.0, prices, portfolio, min_trade_usd)
-            portfolio['cash_percentage'] = cash_backup
-            portfolio['portfolio_assets']['usd']['amount'] = usd_amount_backup
+            if triggered:
+                #print("curr_crypto_percentage = %.4f" % curr_crypto_percentage)
+                #print("delta_condition_percentage = %.4f" % condition_value)
+                #print("target_crypto_percentage = %.4f" % target_crypto_percentage)
+                logging.info("limit_condition_percentage = %.4f" % (target_crypto_percentage + condition_value))
+                cash_backup = portfolio['cash_percentage']
+                usd_amount_backup = portfolio['portfolio_assets']['usd']['amount']
+                portfolio['cash_percentage'] = 0
+                portfolio['portfolio_assets']['usd']['amount'] = 0
+                msg_extra, trades = calculate_rebalancing(cash_value_cryptos, 0.0, prices, portfolio, min_trade_usd)
+                portfolio['cash_percentage'] = cash_backup
+                portfolio['portfolio_assets']['usd']['amount'] = usd_amount_backup
 
         elif alert['condition'] == '<':
             triggered = curr_crypto_percentage < target_crypto_percentage - condition_value
-            logging.info("limit_condition_percentage = %.4f" % (target_crypto_percentage - condition_value))
-            cash_backup = portfolio['cash_percentage']
-            usd_amount_backup = portfolio['portfolio_assets']['usd']['amount']
-            portfolio['cash_percentage'] = 0
-            portfolio['portfolio_assets']['usd']['amount'] = 0
-            msg_extra = calculate_rebalancing(cash_value_cryptos, 0.0, prices, portfolio, min_trade_usd)
-            portfolio['cash_percentage'] = cash_backup
-            portfolio['portfolio_assets']['usd']['amount'] = usd_amount_backup
+            if triggered:
+                #print("curr_crypto_percentage = %.4f" % curr_crypto_percentage)
+                #print("delta_condition_percentage = %.4f" % condition_value)
+                #print("target_crypto_percentage = %.4f" % target_crypto_percentage)
+                logging.info("limit_condition_percentage = %.4f" % (target_crypto_percentage - condition_value))
+                cash_backup = portfolio['cash_percentage']
+                usd_amount_backup = portfolio['portfolio_assets']['usd']['amount']
+                portfolio['cash_percentage'] = 0
+                portfolio['portfolio_assets']['usd']['amount'] = 0
+                msg_extra, trades = calculate_rebalancing(cash_value_cryptos, 0.0, prices, portfolio, min_trade_usd)
+                portfolio['cash_percentage'] = cash_backup
+                portfolio['portfolio_assets']['usd']['amount'] = usd_amount_backup
 
         if triggered:
             break
-    return triggered, prices, msg_extra
+    return triggered, prices, msg_extra, trades
 
 
-def run(portfolios=None, alerts=None, prices=None):
+def run(portfolios=None, alerts=None, prices=None, mail_enabled=True):
+    ret_trades = []
 
     logging.info('='*80)
     logging.info('='*80)
@@ -218,10 +229,11 @@ def run(portfolios=None, alerts=None, prices=None):
             if triggered:
                 # Send Email
                 logging.info(alert['message'])
-                send_email(alert['recipient'].split(','), 'CRYPTO-ALERT: '+ alert['message'], alert['message'])
+                if mail_enabled:
+                    send_email(alert['recipient'].split(','), 'CRYPTO-ALERT: '+ alert['message'], alert['message'])
 
         elif alert['type'] == 'cash_percentage':
-            triggered, prices, msg_extra = process_alert_cash(alert, prices, cg, portfolios)
+            triggered, prices, msg_extra, trades = process_alert_cash(alert, prices, cg, portfolios)
             if triggered:
                 # Send Email
                 msg = alert['message'] + '<br/>\n' + msg_extra
@@ -229,10 +241,13 @@ def run(portfolios=None, alerts=None, prices=None):
                 logging.info(msg)
                 os.system('tail -n 117 cryptoalerts.log > extra.log;')
                 extra = '\n' + '<br/><pre>' + open('extra.log').read() + '<pre/>'
-                send_email(alert['recipient'].split(','), subject, msg + '\n\n' + extra)
+                if mail_enabled:
+                    send_email(alert['recipient'].split(','), subject, msg + '\n\n' + extra)
+                if trades != []:
+                    ret_trades = trades
 
         elif alert['type'] == 'crypto_percentage':
-            triggered, prices, msg_extra = process_alert_crypto(alert, prices, cg, portfolios)
+            triggered, prices, msg_extra, trades = process_alert_crypto(alert, prices, cg, portfolios)
             if triggered:
                 # Send Email
                 msg = alert['message'] + '<br/>\n' + msg_extra
@@ -240,7 +255,10 @@ def run(portfolios=None, alerts=None, prices=None):
                 logging.info(msg)
                 os.system('tail -n 117 cryptoalerts.log > extra.log;')
                 extra = '\n' + '<br/><pre>' + str(open('extra.log').read()) + '<pre/>'
-                send_email(alert['recipient'].split(','), subject, msg + '\n\n' + extra)
+                if mail_enabled:
+                    send_email(alert['recipient'].split(','), subject, msg + '\n\n' + extra)
+                if trades != []:
+                    ret_trades = trades
 
     # Send Status Message (Daily)
     if datetime.datetime.now().hour == 12:
@@ -254,8 +272,7 @@ def run(portfolios=None, alerts=None, prices=None):
                 send_email(alert['recipient'].split(','), subject, msg)
             status_sent[recp] = True
 
-
-    return msg
+    return msg, ret_trades
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 
 import csv
-with open('AVAXBUSD-5m-2022-Ene-Feb-Mar.csv', newline='') as csvfile:
+with open('ETHBUSD-5m-2022-Ene-Feb-Mar.csv', newline='') as csvfile:
      spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
      for row in spamreader:
          p0 = float(row[1])
