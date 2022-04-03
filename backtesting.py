@@ -129,7 +129,15 @@ def backtest():
     asset1 = 'avalanche-2' #'bitcoin' # 'avalanche-2'
     asset2 = 'terra-luna' #'ethereum' # 'terra-luna'
     cash_percentage = 20.0
-    curr_alerts = alerts1
+
+    strategy = 'CASH' # 'CRYPTOPAIR' # 'HYBRID'
+
+    if strategy == 'HYBRID':
+        curr_alerts = alerts#alerts1#alerts1
+    elif strategy == 'CASH':
+        curr_alerts = alerts1
+    elif strategy == 'CRYPTOPAIR':
+        curr_alerts = alerts2
     delta_percentage = 2.0
 
     best_period = None
@@ -139,26 +147,38 @@ def backtest():
     best_nro_trades = None
 
     # period
-    rangej = [20,22,24,26,28]#[18,24,30]#[2,4,8,16,32,64,128,256] #[120,122,124,126,128,130,132,134,136]#[4,8,16,32,64,128,256] #list(range(1, 25))
+    rangej = [48]#[24]#[20,22,24,26,28]#[18,24,30]#[2,4,8,16,32,64,128,256] #[120,122,124,126,128,130,132,134,136]#[4,8,16,32,64,128,256] #list(range(1, 25))
     rangej.reverse()
     # delta percent
-    rangei = [1.18,1.19,1.2,1.21,1.22]#[1.10,1.15,1.20,1.25,1.30]#[120,122,124,126,128,130,132,134,136]#[2,4,8,16,32,64,128,256] #list(range(1, 41))
+    rangei = [1.2,1.3,1.4,1.5,1.6]#[1.18,1.19,1.2,1.21,1.22]#[1.10,1.15,1.20,1.25,1.30]#[120,122,124,126,128,130,132,134,136]#[2,4,8,16,32,64,128,256] #list(range(1, 41))
     rangei.reverse()
+    rangeicrypto = [7.2,7.4,7.6,7.8,8.0]  # [1.18,1.19,1.2,1.21,1.22]#[1.10,1.15,1.20,1.25,1.30]#[120,122,124,126,128,130,132,134,136]#[2,4,8,16,32,64,128,256] #list(range(1, 41))
+    rangeicrypto.reverse()
+
+
     for j in rangej:
-        for i in rangei:
+        for i, icrypto in zip(rangei,rangeicrypto):
 
             delta_percentage = i #* 0.05
+            delta_percentage_cryptos = icrypto
             portfolios = copy.deepcopy(portfolios_backup)
 
             period = j
-            print('backtesting period = %d delta percentage = %f' % (period,delta_percentage))
+            print('backtesting period = %d delta percentage = %f delta percent pair cryptos = %f ' % (period,delta_percentage, delta_percentage_cryptos))
             portfolios[pname]['cash_percentage'] = cash_percentage
-            if curr_alerts[0]['type'] == 'cash_percentage':
+            if len(curr_alerts) == 2:
+                if curr_alerts[0]['type'] == 'cash_percentage':
+                    curr_alerts[0]['value'] = (100 - cash_percentage) + delta_percentage
+                    curr_alerts[1]['value'] = (100 - cash_percentage) - delta_percentage
+                elif curr_alerts[0]['type'] == 'crypto_percentage':
+                    curr_alerts[0]['value'] = delta_percentage_cryptos
+                    curr_alerts[1]['value'] = delta_percentage_cryptos
+            elif len(curr_alerts) == 4:
+                print('delta percentage pair cryptos = %f ' % (delta_percentage_cryptos))
                 curr_alerts[0]['value'] = (100 - cash_percentage) + delta_percentage
                 curr_alerts[1]['value'] = (100 - cash_percentage) - delta_percentage
-            elif curr_alerts[0]['type'] == 'crypto_percentage':
-                curr_alerts[0]['value'] = delta_percentage
-                curr_alerts[1]['value'] = delta_percentage
+                curr_alerts[2]['value'] = delta_percentage_cryptos
+                curr_alerts[3]['value'] = delta_percentage_cryptos
 
             # portfolio x 10
             portfolios['volatility']['portfolio_assets']['usd']['amount'] = str(float(portfolios['volatility']['portfolio_assets']['usd']['amount']) * 1000)

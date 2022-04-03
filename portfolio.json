@@ -1,14 +1,15 @@
 {
   "volatility": {
+    "cash_percentage" : "20.0",
     "portfolio_assets": {
-      "ethereum": {
-        "amount": "0.4"
-      },
       "bitcoin": {
-        "amount": "0.01"
+        "amount": "0.872552000"
+      },
+      "ethereum": {
+        "amount": "8.16167000"
       },
       "usd": {
-        "amount": "5784.0"
+        "amount": "419.19085300"
       }
     }
   }
