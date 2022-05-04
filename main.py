@@ -261,7 +261,7 @@ def run(portfolios=None, alerts=None, prices=None, mail_enabled=True):
                     ret_trades = trades
 
     # Send Status Message (Daily)
-    if datetime.datetime.now().hour in [12,13,14,15]:
+    if datetime.datetime.now().hour in [12]: #,13,14,15]:
         logging.info('INFO: sending status email')
         subject = 'INFO crypto-alerts: system is up and running'
         msg = subject + '\n' + '<pre>' + json.dumps(portfolios, indent=4, sort_keys=True)  \
